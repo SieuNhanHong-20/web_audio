@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>普通话 Podcast Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #101320;
+        --outer: #1a1f35;
+        --nav: #1e2338;
+        --panel: #1a1f35;
+        --panel-r: #1e2440;
+        --border-out: #5b6baa;
+        --border-in: rgba(80, 100, 180, 0.25);
+        --border-dim: rgba(80, 100, 180, 0.15);
+        --accent: #4e7cff;
+        --accent-h: #3d6be8;
+        --accent-glow: rgba(78, 124, 255, 0.25);
+        --sel-bg: rgba(78, 124, 255, 0.15);
+        --sel-border: #4e7cff;
+        --text: #c8cfe8;
+        --text-bright: #e8ecf8;
+        --muted: #5a6180;
+        --muted2: #7a83a8;
+        --success: #3db87a;
+        --error: #e05a5a;
+        --female: #c060b0;
+        --male: #4e9de0;
+        --badge-bg: rgba(40, 50, 100, 0.7);
+        --nav-h: 48px;
+        --bar-h: 62px;
+        --resize-w: 6px;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "DM Sans", sans-serif;
+        font-size: 15px;
+      }
+
+      .chrome {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--outer);
+        border: 1.5px solid var(--border-out);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow:
+          0 0 40px rgba(78, 100, 200, 0.18),
+          inset 0 0 0 1px rgba(120, 140, 255, 0.08);
+      }
+
+      /* ── NAV ── */
+      .nav {
+        height: var(--nav-h);
+        background: var(--nav);
+        border-bottom: 1px solid var(--border-in);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        flex-shrink: 0;
+      }
+      .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .nav-badge {
+        background: var(--badge-bg);
+        border: 1px solid rgba(78, 124, 255, 0.35);
+        border-radius: 5px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: #8aadff;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .nav-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4e7cff;
+        box-shadow: 0 0 6px #4e7cff;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.7);
+        }
+      }
+      .nav-title {
+        font-family: "Noto Serif SC", serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-bright);
+      }
+      .nav-right {
+        display: flex;
+        gap: 18px;
+        font-size: 12px;
+        color: var(--muted2);
+        align-items: center;
+      }
+      .nav-right span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .nav-right span::before {
+        content: "";
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--success);
+        box-shadow: 0 0 4px var(--success);
+      }
+      #nav-status {
+        font-size: 12px;
+        font-weight: 500;
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: rgba(78, 124, 255, 0.1);
+        border: 1px solid rgba(78, 124, 255, 0.2);
+        display: none;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        animation: fadeIn 0.2s ease;
+      }
+      #nav-status::before {
+        display: none !important;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* ── WORKSPACE ── */
+      .workspace {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* Main area: text + resizer + voice */
+      .main-area {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* ── PANEL SHARED ── */
+      .panel {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .panel-head {
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border-bottom: 1px solid var(--border-in);
+        flex-shrink: 0;
+      }
+      .plabel {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8aadff;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .plabel::before {
+        content: "•";
+        color: var(--accent);
+      }
+
+      /* ── TEXT PANEL ── */
+      .panel-text {
+        flex: 1;
+        min-width: 300px;
+        border-right: 1px solid var(--border-in);
+        background: var(--panel);
+      }
+      .char-count {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .char-count b {
+        color: #8aadff;
+        font-weight: 600;
+      }
+
+      #text-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        resize: none;
+        color: var(--text-bright);
+        font-family: "Noto Serif SC", serif;
+        font-size: 17px;
+        line-height: 2;
+        padding: 18px 20px;
+        caret-color: var(--accent);
+        overflow-y: auto;
+        width: 100%;
+      }
+      #text-input::placeholder {
+        color: var(--muted);
+        font-size: 15px;
+      }
+      #text-input::-webkit-scrollbar {
+        width: 4px;
+      }
+      #text-input::-webkit-scrollbar-thumb {
+        background: rgba(78, 124, 255, 0.2);
+        border-radius: 4px;
+      }
+
+      /* ── RESIZER ── */
+      .resizer {
+        width: var(--resize-w);
+        background: var(--border-in);
+        cursor: col-resize;
+        flex-shrink: 0;
+        transition: background 0.15s;
+        position: relative;
+      }
+      .resizer:hover,
+      .resizer.dragging {
+        background: var(--accent);
+      }
+      .resizer::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+      }
+
+      /* ── VOICE PANEL ── */
+      .panel-voice {
+        width: 340px;
+        min-width: 200px;
+        max-width: 600px;
+        flex-shrink: 0;
+        background: var(--panel-r);
+      }
+      .voice-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .voice-scroll::-webkit-scrollbar {
+        width: 3px;
+      }
+      .voice-scroll::-webkit-scrollbar-thumb {
+        background: rgba(78, 124, 255, 0.2);
+        border-radius: 3px;
+      }
+
+      .voice-option input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .voice-card {
+        padding: 10px 13px;
+        border: 1px solid var(--border-dim);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition:
+          border-color 0.13s,
+          background 0.13s;
+      }
+      .voice-card:hover {
+        border-color: rgba(78, 124, 255, 0.4);
+        background: rgba(78, 124, 255, 0.05);
+      }
+      .voice-option input:checked + .voice-card {
+        border-color: var(--sel-border);
+        background: var(--sel-bg);
+        box-shadow: 0 0 12px rgba(78, 124, 255, 0.12);
+      }
+      .voice-radio {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1.5px solid var(--muted);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.13s;
+      }
+      .voice-option input:checked + .voice-card .voice-radio {
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+      .voice-option input:checked + .voice-card .voice-radio::after {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .voice-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .voice-name {
+        font-family: "Noto Serif SC", serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-bright);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .voice-desc {
+        font-size: 12px;
+        color: var(--muted2);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .vtag {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 3px 7px;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .vtag-f {
+        background: rgba(192, 96, 176, 0.15);
+        color: var(--female);
+        border: 1px solid rgba(192, 96, 176, 0.25);
+      }
+      .vtag-m {
+        background: rgba(78, 157, 224, 0.15);
+        color: var(--male);
+        border: 1px solid rgba(78, 157, 224, 0.25);
+      }
+
+      /* ── ACTION BAR ── */
+      .action-bar {
+        height: var(--bar-h);
+        background: var(--nav);
+        border-top: 1px solid var(--border-in);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 18px;
+        flex-shrink: 0;
+      }
+
+      /* Divider */
+      .bar-div {
+        width: 1px;
+        height: 28px;
+        background: var(--border-in);
+        flex-shrink: 0;
+      }
+
+      /* Buttons */
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        font-family: "DM Sans", sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        height: 38px;
+        padding: 0 18px;
+        transition: all 0.13s;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .btn-preview {
+        background: transparent;
+        border: 1px solid rgba(78, 124, 255, 0.35);
+        color: #8aadff;
+      }
+      .btn-preview:hover {
+        border-color: var(--accent);
+        background: rgba(78, 124, 255, 0.08);
+        color: #aac4ff;
+      }
+      .btn-generate {
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 2px 14px var(--accent-glow);
+      }
+      .btn-generate:hover {
+        background: var(--accent-h);
+        box-shadow: 0 4px 20px rgba(78, 124, 255, 0.4);
+        transform: translateY(-1px);
+      }
+      .btn-download {
+        background: var(--success);
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 2px 12px rgba(61, 184, 122, 0.25);
+      }
+      .btn-download:hover {
+        transform: translateY(-1px);
+      }
+
+      /* ── SPEED CONTROL ── */
+      .speed-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .speed-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted2);
+        white-space: nowrap;
+      }
+      .speed-arrow {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: rgba(78, 124, 255, 0.1);
+        border: 1px solid rgba(78, 124, 255, 0.25);
+        color: #8aadff;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.13s;
+        user-select: none;
+      }
+      .speed-arrow:hover {
+        background: rgba(78, 124, 255, 0.2);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .speed-slider-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        width: 110px;
+      }
+      .speed-track {
+        position: relative;
+        width: 100%;
+        height: 4px;
+        background: rgba(78, 124, 255, 0.15);
+        border-radius: 4px;
+        cursor: pointer;
+        margin-bottom: 3px;
+      }
+      .speed-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background: var(--accent);
+        border-radius: 4px;
+        transition: width 0.15s;
+      }
+      .speed-thumb {
+        position: absolute;
+        top: 50%;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 6px var(--accent-glow);
+        transform: translate(-50%, -50%);
+        cursor: grab;
+        transition: left 0.15s;
+      }
+      .speed-thumb:active {
+        cursor: grabbing;
+        transform: translate(-50%, -50%) scale(1.15);
+      }
+
+      .speed-ticks {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0 2px;
+      }
+      .speed-tick {
+        font-size: 10px;
+        color: var(--muted);
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.13s;
+        line-height: 1;
+      }
+      .speed-tick:hover {
+        color: var(--text);
+      }
+      .speed-tick.active {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .speed-val {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent);
+        white-space: nowrap;
+        min-width: 36px;
+        text-align: center;
+      }
+
+      /* States */
+      .sw {
+        flex: 1;
+        min-width: 0;
+        display: none;
+        align-items: center;
+        gap: 10px;
+      }
+      .sw.on {
+        display: flex;
+      }
+      audio {
+        display: none;
+      }
+      .ap-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        font-size: 12px;
+        padding: 0;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ap-btn:hover {
+        background: var(--accent-h);
+      }
+      .ap-track {
+        flex: 1;
+        height: 4px;
+        background: rgba(78, 124, 255, 0.15);
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 0;
+        cursor: pointer;
+      }
+      .ap-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--accent);
+        border-radius: 4px;
+        transition: width 0.1s linear;
+      }
+      .ap-time {
+        font-size: 11px;
+        color: var(--muted2);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .prog-track {
+        flex: 1;
+        height: 4px;
+        background: rgba(78, 124, 255, 0.12);
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .prog-bar {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 4px;
+        width: 0%;
+        transition: width 0.35s;
+        box-shadow: 0 0 8px var(--accent-glow);
+      }
+      .prog-msg {
+        font-size: 12px;
+        color: var(--muted2);
+        white-space: nowrap;
+      }
+      .prog-pct {
+        font-size: 13px;
+        color: var(--accent);
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .done-msg {
+        font-size: 14px;
+        color: var(--success);
+        white-space: nowrap;
+      }
+      .tips-txt {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* toast removed - notifications now in nav header */
+    </style>
+  </head>
+  <body>
+    <div class="chrome">
+      <!-- NAV -->
+      <div class="nav">
+        <div class="nav-left">
+          <div class="nav-badge"><span class="nav-dot"></span>TTS Studio</div>
+          <div class="nav-title">普通话 Podcast Studio</div>
+        </div>
+        <div class="nav-right">
+          <span id="nav-status" style="display: none; color: #8aadff"></span>
+          <span>Neural AI · Miễn phí</span>
+          <span>MP3 192kbps</span>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <div class="main-area">
+          <!-- TEXT PANEL -->
+          <div class="panel panel-text" id="panel-text">
+            <div class="panel-head">
+              <div class="plabel">Nội dung văn bản</div>
+              <div class="char-count"><b id="cnum">0</b> ký tự</div>
+            </div>
+            <textarea
+              id="text-input"
+              placeholder="在这里输入您的中文内容...&#10;&#10;Nhập nội dung tiếng Trung vào đây. Văn bản dài sẽ tự động chia đoạn và ghép lại thành 1 file MP3."
+            ></textarea>
+          </div>
+
+          <!-- RESIZER -->
+          <div class="resizer" id="resizer"></div>
+
+          <!-- VOICE PANEL -->
+          <div class="panel panel-voice" id="panel-voice">
+            <div class="panel-head">
+              <div class="plabel">Chọn giọng đọc</div>
+            </div>
+            <div class="voice-scroll" id="voice-list"></div>
+          </div>
+        </div>
+
+        <!-- ACTION BAR -->
+        <div class="action-bar">
+          <button class="btn-preview" id="btn-pre" onclick="doPreview()">
+            ▷ Nghe thử
+          </button>
+          <button class="btn-generate" id="btn-gen" onclick="doGenerate()">
+            ⬤ Tạo MP3 đầy đủ
+          </button>
+
+          <div class="bar-div"></div>
+
+          <!-- SPEED CONTROL -->
+          <div class="speed-wrap">
+            <div class="speed-label">Tốc độ</div>
+            <div class="speed-arrow" id="sp-left" onclick="stepSpeed(-1)">
+              &#8249;
+            </div>
+            <div class="speed-slider-wrap">
+              <div class="speed-track" id="sp-track">
+                <div class="speed-fill" id="sp-fill"></div>
+                <div class="speed-thumb" id="sp-thumb"></div>
+              </div>
+              <div class="speed-ticks">
+                <span class="speed-tick" id="tick-0" onclick="setSpeedStep(0)"
+                  >Chậm</span
+                >
+                <span class="speed-tick" id="tick-5" onclick="setSpeedStep(5)"
+                  >TB</span
+                >
+                <span class="speed-tick" id="tick-10" onclick="setSpeedStep(10)"
+                  >Nhanh</span
+                >
+              </div>
+            </div>
+            <div class="speed-arrow" id="sp-right" onclick="stepSpeed(1)">
+              &#8250;
+            </div>
+            <div class="speed-val" id="sp-val">1.0×</div>
+          </div>
+
+          <div class="bar-div"></div>
+
+          <!-- audio preview - custom player, no volume/overflow -->
+          <div class="sw" id="sw-audio">
+            <audio id="audio-el"></audio>
+            <button class="ap-btn" onclick="toggleAudio()" id="ap-play">
+              &#9654;
+            </button>
+            <div class="ap-track" id="ap-track">
+              <div class="ap-fill" id="ap-fill"></div>
+            </div>
+            <span class="ap-time" id="ap-time">0:00 / 0:00</span>
+          </div>
+          <!-- progress -->
+          <div class="sw" id="sw-prog">
+            <div class="prog-track"><div class="prog-bar" id="pbar"></div></div>
+            <div class="prog-msg" id="pmsg">Đang xử lý...</div>
+            <div class="prog-pct" id="ppct">0%</div>
+          </div>
+          <!-- done -->
+          <div class="sw" id="sw-done">
+            <div class="done-msg">🎙 Hoàn thành! File MP3 sẵn sàng.</div>
+            <button class="btn-download" onclick="doDownload()">
+              ↓ Tải MP3
+            </button>
+          </div>
+          <!-- tips -->
+          <div class="sw on" id="sw-tips">
+            <div class="tips-txt">
+              192kbps · Tự chia đoạn dài · Neural AI Microsoft Edge
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let jobId = null;
+
+      // ── Speed control: 11 bước (0–10), mũi tên = 1 bước ──
+      let speedStep = 5; // mặc định TB = 1.0×
+      const SPEED_STEPS = 10;
+
+      function stepToRate(s) {
+        // 0 = -30%, 5 = +0%, 10 = +50%
+        const val = -30 + s * 8;
+        return (val >= 0 ? "+" : "") + Math.round(val) + "%";
+      }
+      function stepToDisplay(s) {
+        const vals = [
+          "0.7×",
+          "0.78×",
+          "0.85×",
+          "0.93×",
+          "0.96×",
+          "1.0×",
+          "1.08×",
+          "1.16×",
+          "1.24×",
+          "1.35×",
+          "1.5×",
+        ];
+        return vals[s] || "1.0×";
+      }
+      function renderSpeed() {
+        const pct = (speedStep / SPEED_STEPS) * 100;
+        document.getElementById("sp-fill").style.width = pct + "%";
+        document.getElementById("sp-thumb").style.left = pct + "%";
+        document.getElementById("sp-val").textContent =
+          stepToDisplay(speedStep);
+        // Highlight tick gần nhất
+        document
+          .getElementById("tick-0")
+          .classList.toggle("active", speedStep <= 2);
+        document
+          .getElementById("tick-5")
+          .classList.toggle("active", speedStep >= 3 && speedStep <= 7);
+        document
+          .getElementById("tick-10")
+          .classList.toggle("active", speedStep >= 8);
+      }
+      function setSpeedStep(s) {
+        speedStep = Math.max(0, Math.min(SPEED_STEPS, s));
+        renderSpeed();
+      }
+      function stepSpeed(dir) {
+        setSpeedStep(speedStep + dir);
+      }
+      function setSpeedByPreset(i) {
+        setSpeedStep([0, 5, 10][i]);
+      }
+
+      // Drag slider
+      (function () {
+        const track = document.getElementById("sp-track");
+        const thumb = document.getElementById("sp-thumb");
+        let dragging = false;
+
+        function calcStep(clientX) {
+          const rect = track.getBoundingClientRect();
+          const pct = Math.max(
+            0,
+            Math.min(1, (clientX - rect.left) / rect.width),
+          );
+          return Math.round(pct * SPEED_STEPS);
+        }
+
+        track.addEventListener("mousedown", (e) => {
+          dragging = true;
+          setSpeedStep(calcStep(e.clientX));
+        });
+        document.addEventListener("mousemove", (e) => {
+          if (dragging) setSpeedStep(calcStep(e.clientX));
+        });
+        document.addEventListener("mouseup", () => {
+          dragging = false;
+        });
+        track.addEventListener(
+          "touchstart",
+          (e) => {
+            dragging = true;
+            setSpeedStep(calcStep(e.touches[0].clientX));
+          },
+          { passive: true },
+        );
+        document.addEventListener(
+          "touchmove",
+          (e) => {
+            if (dragging) setSpeedStep(calcStep(e.touches[0].clientX));
+          },
+          { passive: true },
+        );
+        document.addEventListener("touchend", () => {
+          dragging = false;
+        });
+      })();
+
+      renderSpeed();
+
+      // ── Custom audio player ──
+      (function () {
+        const audio = document.getElementById("audio-el");
+        const playBtn = document.getElementById("ap-play");
+        const fill = document.getElementById("ap-fill");
+        const track = document.getElementById("ap-track");
+        const timeEl = document.getElementById("ap-time");
+
+        function fmt(s) {
+          if (!s || isNaN(s)) return "0:00";
+          const m = Math.floor(s / 60),
+            sec = Math.floor(s % 60);
+          return m + ":" + String(sec).padStart(2, "0");
+        }
+
+        audio.addEventListener("timeupdate", () => {
+          const pct = audio.duration
+            ? (audio.currentTime / audio.duration) * 100
+            : 0;
+          fill.style.width = pct + "%";
+          timeEl.textContent =
+            fmt(audio.currentTime) + " / " + fmt(audio.duration);
+        });
+        audio.addEventListener("ended", () => {
+          playBtn.innerHTML = "&#9654;";
+        });
+        audio.addEventListener("play", () => {
+          playBtn.innerHTML = "&#9646;&#9646;";
+        });
+        audio.addEventListener("pause", () => {
+          playBtn.innerHTML = "&#9654;";
+        });
+
+        track.addEventListener("click", (e) => {
+          if (!audio.duration) return;
+          const rect = track.getBoundingClientRect();
+          audio.currentTime =
+            ((e.clientX - rect.left) / rect.width) * audio.duration;
+        });
+      })();
+
+      // ── Resizer (drag to resize voice panel) ──
+      (function () {
+        const resizer = document.getElementById("resizer");
+        const voicePanel = document.getElementById("panel-voice");
+        let dragging = false,
+          startX = 0,
+          startW = 0;
+
+        resizer.addEventListener("mousedown", (e) => {
+          dragging = true;
+          startX = e.clientX;
+          startW = voicePanel.getBoundingClientRect().width;
+          resizer.classList.add("dragging");
+          document.body.style.cursor = "col-resize";
+          document.body.style.userSelect = "none";
+        });
+        document.addEventListener("mousemove", (e) => {
+          if (!dragging) return;
+          const delta = startX - e.clientX; // drag left = wider
+          const newW = Math.max(200, Math.min(600, startW + delta));
+          voicePanel.style.width = newW + "px";
+        });
+        document.addEventListener("mouseup", () => {
+          if (!dragging) return;
+          dragging = false;
+          resizer.classList.remove("dragging");
+          document.body.style.cursor = "";
+          document.body.style.userSelect = "";
+        });
+      })();
+
+      function toggleAudio() {
+        const a = document.getElementById("audio-el");
+        a.paused ? a.play() : a.pause();
+      }
+
+      // ── Load voices ──
+      async function loadVoices() {
+        try {
+          const vs = await (await fetch("/voices")).json();
+          document.getElementById("voice-list").innerHTML = vs
+            .map(
+              (v, i) => `
+      <label class="voice-option">
+        <input type="radio" name="v" value="${v.id}" ${i === 0 ? "checked" : ""}>
+        <div class="voice-card">
+          <div class="voice-radio"></div>
+          <div class="voice-info">
+            <div class="voice-name">${v.name}</div>
+            <div class="voice-desc">${v.style}</div>
+          </div>
+          <span class="vtag ${v.gender === "Nữ" ? "vtag-f" : "vtag-m"}">${v.gender}</span>
+        </div>
+      </label>`,
+            )
+            .join("");
+        } catch {
+          navStatus("❌ Không kết nối được server!", 1);
+        }
+      }
+
+      // ── Text input: clean whitespace on ALL paste methods ──
+      const textEl = document.getElementById("text-input");
+
+      function cleanText(txt) {
+        return txt
+          .split("\n")
+          .map((l) => l.replace(/^[\s\u3000\ufeff]+|[\s\u3000\ufeff]+$/g, ""))
+          .join("\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+      }
+
+      // Method 1: intercept Ctrl+V paste
+      textEl.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const raw = (e.clipboardData || window.clipboardData).getData(
+          "text/plain",
+        );
+        const txt = cleanText(raw);
+        const s = textEl.selectionStart,
+          end = textEl.selectionEnd;
+        textEl.value =
+          textEl.value.substring(0, s) + txt + textEl.value.substring(end);
+        textEl.selectionStart = textEl.selectionEnd = s + txt.length;
+        document.getElementById("cnum").textContent =
+          textEl.value.length.toLocaleString();
+      });
+
+      // Method 2: catch drag-drop / context-menu paste via input event
+      let prevValue = "";
+      textEl.addEventListener("focus", () => {
+        prevValue = textEl.value;
+      });
+      textEl.addEventListener("input", function () {
+        const cur = this.value;
+        const added = cur.length - prevValue.length;
+        // Nếu thêm nhiều hơn 3 ký tự 1 lúc = có thể là paste
+        if (added > 3) {
+          const pos = this.selectionStart;
+          const cleaned = cleanText(cur);
+          if (cleaned !== cur) {
+            const diff = cleaned.length - cur.length;
+            this.value = cleaned;
+            this.selectionStart = this.selectionEnd = Math.max(0, pos + diff);
+          }
+        }
+        prevValue = this.value;
+        document.getElementById("cnum").textContent =
+          this.value.length.toLocaleString();
+      });
+
+      const gv = () =>
+        (
+          document.querySelector('input[name="v"]:checked') || {
+            value: "zh-CN-XiaoxiaoNeural",
+          }
+        ).value;
+      const gt = () => {
+        // Làm sạch văn bản trước khi gửi
+        return textEl.value
+          .split("\n")
+          .map((l) => l.trim())
+          .join("\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+      };
+
+      function show(id) {
+        ["sw-audio", "sw-prog", "sw-done", "sw-tips"].forEach((x) => {
+          document.getElementById(x).classList.toggle("on", x === id);
+        });
+      }
+
+      async function doPreview() {
+        const txt = gt();
+        if (!txt) {
+          navStatus("⚠ Vui lòng nhập văn bản!", 1);
+          return;
+        }
+        const btn = document.getElementById("btn-pre");
+        btn.disabled = true;
+        btn.textContent = "⏳ Đang tạo...";
+        show(null);
+        try {
+          const r = await fetch("/preview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: txt,
+              voice: gv(),
+              rate: stepToRate(speedStep),
+            }),
+          });
+          if (!r.ok) throw 0;
+          const a = document.getElementById("audio-el");
+          a.src = URL.createObjectURL(await r.blob());
+          show("sw-audio");
+          a.play();
+          navStatus("▷ Đang phát thử 200 ký tự đầu...", 0);
+        } catch {
+          navStatus("❌ Lỗi khi tạo preview", 1);
+          show("sw-tips");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "▷ Nghe thử";
+        }
+      }
+
+      async function doGenerate() {
+        const txt = gt();
+        if (!txt) {
+          navStatus("⚠ Vui lòng nhập văn bản!", 1);
+          return;
+        }
+        const btn = document.getElementById("btn-gen");
+        btn.disabled = true;
+        btn.textContent = "⏳ Đang xử lý...";
+        setP(0, "Đang gửi yêu cầu...");
+        show("sw-prog");
+        try {
+          const r = await fetch("/synthesize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: txt,
+              voice: gv(),
+              rate: stepToRate(speedStep),
+            }),
+          });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error || "Lỗi server");
+          jobId = d.job_id;
+          listenSSE(jobId);
+        } catch (e) {
+          navStatus("❌ Lỗi: " + e.message, 1);
+          show("sw-tips");
+          resetBtn();
+        }
+      }
+
+      function listenSSE(id) {
+        const es = new EventSource(`/progress/${id}`);
+        es.onmessage = (e) => {
+          const d = JSON.parse(e.data);
+          setP(d.percent, d.message);
+          if (d.status === "done") {
+            es.close();
+            show("sw-done");
+            resetBtn();
+            navStatus("🎉 Tạo MP3 thành công!", 0);
+          } else if (d.status === "error") {
+            es.close();
+            navStatus("❌ " + d.message, 1);
+            show("sw-tips");
+            resetBtn();
+          }
+        };
+        es.onerror = () => {
+          es.close();
+          navStatus("❌ Mất kết nối!", 1);
+          show("sw-tips");
+          resetBtn();
+        };
+      }
+
+      function setP(pct, msg) {
+        document.getElementById("pbar").style.width = pct + "%";
+        document.getElementById("pmsg").textContent = msg;
+        document.getElementById("ppct").textContent = pct + "%";
+      }
+      function resetBtn() {
+        const b = document.getElementById("btn-gen");
+        b.disabled = false;
+        b.textContent = "⬤ Tạo MP3 đầy đủ";
+      }
+      function doDownload() {
+        if (!jobId) return;
+        const a = document.createElement("a");
+        a.href = `/download/${jobId}`;
+        a.download = "podcast_chinese.mp3";
+        a.click();
+        setTimeout(() => {
+          show("sw-tips");
+          jobId = null;
+          navStatus("✅ Đã tải về!", 0);
+        }, 1200);
+      }
+
+      // Hiển thị thông báo trên nav header
+      let nsTimer;
+      function navStatus(msg, isErr = 0) {
+        const el = document.getElementById("nav-status");
+        el.textContent = msg;
+        el.style.display = "flex";
+        el.style.color = isErr ? "var(--error)" : "#8aadff";
+        el.style.borderColor = isErr
+          ? "rgba(224,90,90,0.3)"
+          : "rgba(78,124,255,0.2)";
+        el.style.background = isErr
+          ? "rgba(224,90,90,0.08)"
+          : "rgba(78,124,255,0.1)";
+        clearTimeout(nsTimer);
+        nsTimer = setTimeout(() => {
+          el.style.display = "none";
+          el.textContent = "";
+        }, 4500);
+      }
+
+      show("sw-tips");
+      loadVoices();
+    </script>
+  </body>
+</html>
